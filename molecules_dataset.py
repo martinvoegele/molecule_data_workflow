@@ -513,7 +513,7 @@ class MoleculesDataset(Dataset):
         return
     
     
-    def split(self,train_split=None,vali_split=0.1,test_split=0.1,shuffle=True,random_seed=None):
+    def split_randomly(self,train_split=None,vali_split=0.1,test_split=0.1,shuffle=True,random_seed=None):
         """Creates data indices for training and validation splits.
         
         Args:
