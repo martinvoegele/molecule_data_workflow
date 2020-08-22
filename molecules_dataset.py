@@ -514,7 +514,7 @@ class MoleculesDataset(Dataset):
     
     
     def split_randomly(self,train_split=None,vali_split=0.1,test_split=0.1,shuffle=True,random_seed=None):
-        """Creates data indices for training and validation splits.
+        """Creates random indices for training, validation, and test splits.
         
         Args:
             vali_split (float): fraction of data used for validation. Default: 0.1
@@ -550,6 +550,69 @@ class MoleculesDataset(Dataset):
         indices_test  = indices[:tsplit]
         indices_vali  = indices[tsplit:tsplit+vsplit]
         indices_train = indices[tsplit+vsplit:tsplit+vsplit+train]
+        
+        return indices_test, indices_vali, indices_train
+
+    
+    def split_by_list(self, train_list='training.txt', vali_list='validation.txt', test_list='test.txt', 
+                      identifier='smiles', shuffle=True, random_seed=None):
+        """Creates indices for training, validation, and test splits from lists of identifiers (SMILES strings or L Numbers).
+        
+        Args:
+            train_list (float): list of data points used for training. Default: train.txt
+            vali_list (float): list of data points used for validation. Default: vali.txt
+            test_list (float): list of data points used for testing. Default: test.txt
+            identifier (str): field by which to sort the splits ("smiles"/"lnumber")
+            shuffle (bool): indices are shuffled. Default: True
+            random_seed (int): specifies random seed for shuffling. Default: None
+            
+        Returns:
+            indices_test (int[]):  indices of the test set.
+            indices_vali (int[]):  indices of the validation set.
+            indices_train (int[]): indices of the training set.
+            (NOTE THE ORDER!)
+            
+        """
+        
+        dataset_size = len(self)
+        indices = np.arange(dataset_size,dtype=int)
+        
+        # Shuffle the dataset if desired
+        if shuffle:
+            if random_seed is not None:
+                np.random.seed(random_seed)
+            np.random.shuffle(indices)
+        
+        # Load identifier lists
+        molid_tr = np.loadtxt(train_list, dtype=str)
+        molid_va = np.loadtxt(vali_list, dtype=str)
+        molid_te = np.loadtxt(test_list, dtype=str)
+
+        # Get SMILES strings or L Numbers
+        if identifier.lower() == 'smiles':
+            molid = self.smiles
+        elif identifier.lower() == 'lnumber':
+            molid = self.lnum
+        else:
+            raise ValueError('identifier must be smiles or lnumber!')
+        
+        # Initialize indices
+        indices_tr, indices_va, indices_te = [], [], []
+        
+        # Go through all data points
+        for i, idx in enumerate(indices):
+            if i%100 == 0: print('Looked up %i out of %i molecules'%(i,len(indices)))
+            if molid[idx] in molid_tr:
+                indices_tr.append(idx)
+            if molid[idx] in molid_va:
+                indices_va.append(idx)        
+            if molid[idx] in molid_te:
+                indices_te.append(idx)        
+
+        # Make arrays
+        indices_test  = np.array(indices_te) 
+        indices_vali  = np.array(indices_va) 
+        indices_train = np.array(indices_tr) 
         
         return indices_test, indices_vali, indices_train
     
