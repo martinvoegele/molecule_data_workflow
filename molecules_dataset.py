@@ -513,14 +513,14 @@ class MoleculesDataset(Dataset):
         return
     
     
-    def split_randomly(self,train_split=None,vali_split=0.1,test_split=0.1,shuffle=True,random_seed=None):
+    def split_randomly(self,train_split=None,vali_split=0.1,test_split=0.1,shuffle=True,random_seed=42):
         """Creates random indices for training, validation, and test splits.
         
         Args:
             vali_split (float): fraction of data used for validation. Default: 0.1
             test_split (float): fraction of data used for testing. Default: 0.1
             shuffle (bool):     indices are shuffled. Default: True
-            random_seed (int):  specifies random seed for shuffling. Default: None
+            random_seed (int):  specifies random seed for shuffling. Default: 42
             
         Returns:
             indices_test (int[]):  indices of the test set.

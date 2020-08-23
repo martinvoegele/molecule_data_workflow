@@ -26,10 +26,8 @@ def create_dataset(data_file, out_dir_name,
     """Creates a molecules dataset and saves it to a pickle file."""
     
     # Create the directory for this data set
-    try:
-        os.makedirs(out_dir_name)
-    except FileExistsError:
-        pass
+    try: os.makedirs(out_dir_name)
+    except FileExistsError: pass
 
     # Create the data set
     name = 'FreeSolv'
@@ -49,7 +47,7 @@ def create_dataset(data_file, out_dir_name,
 
     return ds
 
-def write_dataset(ds, out_dir_name, train_split=None, vali_split=0.1, test_split=0.1, seed=42, datatypes=None):
+def write_dataset(ds, out_dir_name, train_split=0.8, vali_split=0.1, test_split=0.1, seed=42, datatypes=None):
 
     if datatypes == None:
         datatypes = ['float64', 'float32', 'float16', 'int64', 'int32', 'int16', 'int8', 'uint8', 'bool']
@@ -86,16 +84,16 @@ def write_dataset(ds, out_dir_name, train_split=None, vali_split=0.1, test_split
 if __name__ == "__main__":
     
     data_file = 'datasets_raw/freesolv/SAMPL.csv'
-    dir_name  = 'datasets_processed/freesolv'
+    dir_name  = 'datasets_processed/freesolv_add-h'
 
     # Create the internal data set
-    ds = create_dataset(data_file, dir_name)
+    ds = create_dataset(data_file, dir_name, add_h=True)
 
     # Load the dataset
     ds_file = open(dir_name+'/dataset.pkl', 'rb')
     ds = pickle.load(ds_file)
 
     # Write the dataset in NPZ format
-    write_dataset(ds, dir_name, train_split=0.8, vali_split=0.1, test_split=0.1)
+    write_dataset(ds, dir_name, seed=2)
 
 

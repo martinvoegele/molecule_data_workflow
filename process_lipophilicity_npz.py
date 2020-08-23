@@ -22,7 +22,7 @@ from molecules_dataset import *
 def create_dataset(data_file, out_dir_name,  
                    elements=None, badlist=None,
                    num_conf=1, order_atoms=False, shuffle_atoms=False, 
-                   add_h=False, noise = 0, max_num_at=None ):
+                   add_h=False, noise = 0, max_num_at=None, max_num_heavy_at=None ):
     """Creates a molecules dataset and saves it to a pickle file."""
     
     # Create the directory for this data set
@@ -37,7 +37,8 @@ def create_dataset(data_file, out_dir_name,
     labels  = ['exp']
     ds = MoleculesDataset(data_file, labels, name=name, id_name=id_name, 
                           num_conf=num_conf, order_atoms=order_atoms, shuffle_atoms=shuffle_atoms,
-                          max_num_at=max_num_at, add_h=add_h, elements=elements, badlist=badlist)
+                          max_num_at=max_num_at, max_num_heavy_at=max_num_heavy_at, add_h=add_h, 
+                          elements=elements, badlist=badlist)
     print('Created dataset with %i molecules.'%len(ds.smiles))
     
     if noise > 0:
@@ -86,10 +87,18 @@ def write_dataset(ds, out_dir_name, train_split=None, vali_split=0.1, test_split
 if __name__ == "__main__":
     
     data_file = 'datasets_raw/lipophilicity/Lipophilicity.csv'
-    dir_name  = 'datasets_processed/lipophilicity'
+    #dir_name  = 'datasets_processed/lipophilicity_max60at_norareelements'
+    dir_name  = 'datasets_processed/lipophilicity_add-h_max60ha_norareelements'
+    
+    elements = ['H','C','N','O','S','Cl','F','Br']
+    maxnumat = 60
 
     # Create the internal data set
-    ds = create_dataset(data_file, dir_name)
+    ds = create_dataset(data_file, dir_name, 
+                        add_h=True,
+                        max_num_heavy_at = maxnumat,
+#                        max_num_at = maxnumat,
+                        elements = elements)
 
     # Load the dataset
     ds_file = open(dir_name+'/dataset.pkl', 'rb')

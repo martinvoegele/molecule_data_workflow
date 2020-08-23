@@ -38,7 +38,8 @@ def create_dataset(data_file, out_dir_name,
     slabels = ['log_sol']
     ds = MoleculesDataset(data_file, labels, alt_labels=slabels, name=name, id_name=id_name, 
                           num_conf=num_conf, order_atoms=order_atoms, shuffle_atoms=shuffle_atoms,
-                          max_num_at=max_num_at, add_h=add_h, elements=elements, badlist=badlist)
+                          max_num_at=max_num_at, max_num_heavy_at=40, add_h=add_h, 
+                          elements=elements, badlist=badlist)
     print('Created dataset with %i molecules.'%len(ds.smiles))
     
     if noise > 0:
@@ -50,16 +51,13 @@ def create_dataset(data_file, out_dir_name,
 
     return ds
 
-def write_dataset(ds, out_dir_name, train_split=None, vali_split=0.1, test_split=0.1, seed=42, datatypes=None):
+def write_dataset(ds, out_dir_name, train_split=0.8, vali_split=0.1, test_split=0.1, seed=42):
 
-    if datatypes == None:
-        datatypes = ['float64', 'float32', 'float16', 'int64', 'int32', 'int16', 'int8', 'uint8', 'bool']
+    datatypes = ['float64', 'float32', 'float16', 'int64', 'int32', 'int16', 'int8', 'uint8', 'bool']
 
     # Create the directory for this data set
-    try:
-        os.mkdir(out_dir_name)
-    except FileExistsError:
-        pass
+    try: os.mkdir(out_dir_name)
+    except FileExistsError: pass
 
     # Define indices to split the data set
     test_indices, vali_indices, train_indices = ds.split_randomly(train_split=train_split,vali_split=vali_split,test_split=test_split,random_seed=seed)
@@ -87,16 +85,17 @@ def write_dataset(ds, out_dir_name, train_split=None, vali_split=0.1, test_split
 if __name__ == "__main__":
     
     data_file = 'datasets_raw/esol/delaney.csv'
-    dir_name  = 'datasets_processed/esol'
+#    dir_name  = 'datasets_processed/esol'
+    dir_name  = 'datasets_processed/esol_add-h'
 
     # Create the internal data set
-    ds = create_dataset(data_file, dir_name)
+    ds = create_dataset(data_file, dir_name, add_h=True)
 
     # Load the dataset
     ds_file = open(dir_name+'/dataset.pkl', 'rb')
     ds = pickle.load(ds_file)
 
     # Write the dataset in NPZ format
-    write_dataset(ds, dir_name, train_split=0.8, vali_split=0.1, test_split=0.1)
+    write_dataset(ds, dir_name)
 
 
