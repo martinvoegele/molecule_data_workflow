@@ -85,11 +85,11 @@ def write_dataset(ds, out_dir_name, train_split=0.8, vali_split=0.1, test_split=
 if __name__ == "__main__":
     
     data_file = 'datasets_raw/esol/delaney.csv'
-#    dir_name  = 'datasets_processed/esol'
-    dir_name  = 'datasets_processed/esol_add-h'
+    dir_name  = 'datasets_processed/esol'
+#   dir_name  = 'datasets_processed/esol_add-h'
 
     # Create the internal data set
-    ds = create_dataset(data_file, dir_name, add_h=True)
+    ds = create_dataset(data_file, dir_name) #, add_h=True)
 
     # Load the dataset
     ds_file = open(dir_name+'/dataset.pkl', 'rb')
