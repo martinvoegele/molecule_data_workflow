@@ -601,7 +601,9 @@ class MoleculesDataset(Dataset):
         
         # Go through all data points
         for i, idx in enumerate(indices):
-            if i%100 == 0: print('Looked up %i out of %i molecules'%(i,len(indices)))
+            if i%100 == 0: 
+                print('Looked up %i out of %i molecules'%(i,len(indices)))
+                sys.stdout.flush()
             if molid[idx] in molid_tr:
                 indices_tr.append(idx)
             if molid[idx] in molid_va:
