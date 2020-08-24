@@ -724,7 +724,8 @@ class MoleculesDataset(Dataset):
                     out_file.write(str(an)+'\n')
     
     
-    def write_compressed(self, filename, indices=None, datatypes=None, write_bonds=False):
+    def write_compressed(self, filename, indices = None, datatypes = None, write_bonds = False,
+                         element_list = None):
         """Writes (a subset of) the data set as compressed numpy arrays.
         Args:
             filename (str):  The name of the output file. 
@@ -735,6 +736,11 @@ class MoleculesDataset(Dataset):
         # (counting indices of processed data set)
         if indices is None:
             indices = np.arange(len(self))
+            
+        # Convert element symbols to atomic numbers
+        if element_list is not None:
+            pte = Chem.GetPeriodicTable()
+            atomic_numbers_list = [ Chem.PeriodicTable.GetAtomicNumber(pte,el) for el in element_list ]
             
         # All charges and position arrays have the same size
         # (the one of the biggest molecule)
@@ -762,7 +768,11 @@ class MoleculesDataset(Dataset):
                 num_atoms[j] = sample['num_at']
                 # ... and for each atom:
                 for ia in range(sample['num_at']):
-                    charges[j,ia] = sample['atomic numbers'][ia]
+                    new_charge = sample['atomic numbers'][ia]
+                    if element_list is not None:
+                        # replace all atomic numbers that are not in the list by 121
+                        new_charge = new_charge if new_charge in atomic_numbers_list else 121
+                    charges[j,ia] = new_charge 
                     positions[j,ia,0] = pos[ia][0] 
                     positions[j,ia,1] = pos[ia][1] 
                     positions[j,ia,2] = pos[ia][2]
