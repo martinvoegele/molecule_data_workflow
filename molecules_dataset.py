@@ -262,8 +262,8 @@ class MoleculesDataset(Dataset):
     """Dataset including coordinates and connectivity."""
 
     def __init__(self, csv_file, col_names, id_name='L_Numbers', sdf_file=None, sd_names=None, name='molecules', 
-                 alt_labels=None, elements=None, add_h=True, order_atoms=False, shuffle_atoms=False, num_conf=1, 
-                 bond_order=False, max_num_at=None, max_num_heavy_at=None, badlist=None,
+                 alt_labels=None, elements=None, add_h=True, remove_h=False, order_atoms=False, shuffle_atoms=False, 
+                 num_conf=1, bond_order=False, max_num_at=None, max_num_heavy_at=None, badlist=None,
                  train_indices_raw=[], vali_indices_raw=[], test_indices_raw=[]):
         """Initializes a data set from a column in a CSV file.
         
@@ -276,6 +276,7 @@ class MoleculesDataset(Dataset):
             alt_labels (list, opt.): Alternative labels for the properties, must be same length as col_names.
             elements (list, opt.): List of permitted elements (Element symbol as str). Default: all elements permitted.
             add_h (bool, opt.): Add hydrogens to the molecules. Default: True.
+            remove_h (bool, opt.): Remove hydrrogens after conformer generation. Default: False.
             order_atoms (bool, opt.): Atoms are ordered such that hydrogens directly follow their heavy atoms. Default: False.
             shuffle_atoms (bool, opt.): Atoms are randomly reshuffled (even if order_atoms is True). Default: False.
             badlist (str, opt.): List of molecules to exclude (first column: L numbers, second column: SMILES)
@@ -306,7 +307,7 @@ class MoleculesDataset(Dataset):
             raw_mol    = [read_smiles(s,add_h=add_h) for s in raw_smiles]
         else:
             # This assumes that molecules in the SDF file are in the same order as in the CSV file!!!
-            raw_mol    = read_sdf_to_mol(sdf_file) 
+            raw_mol    = read_sdf_to_mol(sdf_file,add_h=add_h) 
         
         # Read list of L numbers and SMILES of molecules to exclude 
         if badlist is not None:
@@ -413,7 +414,11 @@ class MoleculesDataset(Dataset):
             else:
                 # Read the list of the coordinates of all conformers
                 conf_coord = get_coordinates_of_conformers(m)
-                        
+
+            # Remove hydrogen atoms
+            if remove_h:
+                m = Chem.RemoveHs(m)
+            
             # only proceed if successfully generated conformers
             if len(conf_coord) == 0: 
                 print('No conformers were generated. Excluded from dataset.')
