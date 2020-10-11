@@ -33,7 +33,7 @@ def read_smiles(smiles,add_h=True):
     mol = Chem.MolFromSmiles(smiles)
     
     # Add hydrogens
-    if add_h:
+    if add_h and (mol is not None):
         mol = Chem.AddHs(mol)
     
     return mol
@@ -50,7 +50,7 @@ def read_inchi(inchi, add_h=True):
     mol_raw = Chem.MolFromInchi(inchi)
 
     # Add hydrogens
-    if add_h:
+    if add_h and (mol is not None):
         mol = Chem.AddHs(mol)
     
     return mol
@@ -70,7 +70,9 @@ def read_sdf_to_mol(sdf_file,sanitize=True, add_h=False, remove_h=False):
     molecules = [mol for mol in suppl]
     
     if add_h:
-        molecules = [Chem.AddHs(mol, addCoords=True) for mol in suppl]
+        for mol in molecules:
+            if mol is not None:
+                mol = Chem.AddHs(mol, addCoords=True)
 
     return molecules
 
@@ -262,7 +264,7 @@ class MoleculesDataset(Dataset):
     """Dataset including coordinates and connectivity."""
 
     def __init__(self, csv_file, col_names, id_name='L_Numbers', sdf_file=None, sd_names=None, name='molecules', 
-                 alt_labels=None, elements=None, add_h=True, remove_h=False, order_atoms=False, shuffle_atoms=False, 
+                 alt_labels=None, elements=None, add_h=True, order_atoms=False, shuffle_atoms=False, 
                  num_conf=1, bond_order=False, max_num_at=None, max_num_heavy_at=None, badlist=None,
                  train_indices_raw=[], vali_indices_raw=[], test_indices_raw=[]):
         """Initializes a data set from a column in a CSV file.
@@ -276,7 +278,6 @@ class MoleculesDataset(Dataset):
             alt_labels (list, opt.): Alternative labels for the properties, must be same length as col_names.
             elements (list, opt.): List of permitted elements (Element symbol as str). Default: all elements permitted.
             add_h (bool, opt.): Add hydrogens to the molecules. Default: True.
-            remove_h (bool, opt.): Remove hydrrogens after conformer generation. Default: False.
             order_atoms (bool, opt.): Atoms are ordered such that hydrogens directly follow their heavy atoms. Default: False.
             shuffle_atoms (bool, opt.): Atoms are randomly reshuffled (even if order_atoms is True). Default: False.
             badlist (str, opt.): List of molecules to exclude (first column: L numbers, second column: SMILES)
@@ -370,7 +371,7 @@ class MoleculesDataset(Dataset):
             if badlist is not None and raw_lnum[im] in bad_lnums:
                 print('Bad L number detected. Excluded from dataset.')
                 continue
-                
+
             # Read numer of atoms and of heavy atoms
             raw_num_at    = m.GetNumAtoms()
             raw_num_heavy = m.GetNumHeavyAtoms()
@@ -387,13 +388,7 @@ class MoleculesDataset(Dataset):
                     print('Too many heavy atoms. Excluded from dataset.')      
             if not small_enough: 
                 continue
-            
-            # Shuffle the atom order
-            if order_atoms:
-                m = reorder_atoms(m)
-            if shuffle_atoms:
-                m = reshuffle_atoms(m)
-                
+
             # Read all atom names and numbers
             new_symbols = [a.GetSymbol() for a in m.GetAtoms()]
             new_at_nums = [a.GetAtomicNum() for a in m.GetAtoms()]
@@ -406,6 +401,8 @@ class MoleculesDataset(Dataset):
             # Track error messages (for conformer generation)
             Chem.WrapLogs()
             sio = sys.stderr = StringIO()
+            # Add hydrogens for better conformer generation
+            m = Chem.AddHs(m)
             # Generate the desired number of conformers
             generate_conformers(m, num_conf)
             if 'ERROR' in sio.getvalue():
@@ -416,13 +413,23 @@ class MoleculesDataset(Dataset):
                 conf_coord = get_coordinates_of_conformers(m)
 
             # Remove hydrogen atoms
-            if remove_h:
+            if not add_h:
                 m = Chem.RemoveHs(m)
             
             # only proceed if successfully generated conformers
             if len(conf_coord) == 0: 
                 print('No conformers were generated. Excluded from dataset.')
                 continue
+            
+            # Shuffle the atom order
+            if order_atoms:
+                m = reorder_atoms(m)
+            if shuffle_atoms:
+                m = reshuffle_atoms(m)
+                
+            # Re-read all atom names and numbers
+            new_symbols = [a.GetSymbol() for a in m.GetAtoms()]
+            new_at_nums = [a.GetAtomicNum() for a in m.GetAtoms()]
                 
             if self.bond_order:
                 # Generate the connectivity matrix with bond orders encoded as (1,1.5,2,3)
