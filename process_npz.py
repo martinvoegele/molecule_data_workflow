@@ -85,10 +85,12 @@ if __name__ == "__main__":
     parser.add_argument( '-i',  dest='data_file',  default='datasets_raw/cyp2c9.csv', help="input file" )
     parser.add_argument( '-o',  dest='out_dir',    default='datasets_processed/cyp2c9', help="output directory" )
     parser.add_argument( '-s',  dest='split',      default='random', help="which way to split the dataset" )
+    parser.add_argument( '-l',  dest='labels',     default=['TRANSFORMED_ACTIVITY'], help="labels to include", type=str, nargs='+' )
     parser.add_argument( '-id', dest='id_name',    default='L_Numbers', type=str, help="header of the column to use as ID" )
     parser.add_argument( '-ma', dest='max_num_at', default=60, type=int, help="maximum number of atoms per molecule" )
     parser.add_argument( '-bl', dest='badlist',    default=None, help="list with bad molecules to exclude" )
     parser.add_argument( '-el', dest='sel_elem',   default=['C','O','N','Cl','S','F'], help="elements to include", type=str, nargs='+' )
+    parser.add_argument( '-nc', dest='num_conf',   default=1, type=int, help="number of conformers per molecule" )
     args = parser.parse_args()
  
     selected_elements = args.sel_elem 
@@ -101,7 +103,7 @@ if __name__ == "__main__":
     # Create the data set
     ds = MoleculesDataset(args.data_file, labels, name=args.data_name, id_name=args.id_name,
                           elements=selected_elements, max_num_at=args.max_num_at, badlist=args.badlist,
-                          num_conf=1, order_atoms=False, shuffle_atoms=False, add_h=False)
+                          num_conf=args.num_conf, order_atoms=False, shuffle_atoms=False, add_h=False)
     print('Created dataset with %i molecules.'%len(ds.smiles))
 
 
