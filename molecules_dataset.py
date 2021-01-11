@@ -487,6 +487,7 @@ class MoleculesDataset(Dataset):
         
         sample = {'smiles': self.smiles[idx],\
                   'lnumber': self.lnum[idx],\
+                  'mol': self.mol[idx],\
                   'num_at': self.num_at[idx],\
                   'symbols': self.symbols[idx],\
                   'atomic numbers': self.at_nums[idx],\
@@ -814,6 +815,106 @@ class MoleculesDataset(Dataset):
         # Save as a compressed array 
         np.savez_compressed(filename,**save_dict)
         
+        return
+
+    
+    def write_sdf_dataset(self, out_name, indices=None):
+        """Writes (a subset of) the data set as one SDF file for the molecules and one CSV file for the data.
+        Args:
+            out_name (str): The name for the output files (without ending).
+            indices (int[]): The indices of the molecules to write data for.
+        """
+        
+        # Define which molecules to use (counting indices of processed data set)
+        if indices is None:
+            indices = np.arange(len(self))
+            
+        # Open the writer
+        w = Chem.SDWriter(out_name+'.sdf')
+        # Go through all molecules
+        for j,idx in enumerate(indices):
+            mol = self.mol[idx]
+            for conf_id in range(mol.GetNumConformers()):
+                # Write all conformers into this file
+                w.write(mol,conf_id)
+        w.close()
+
+        # Create a Pandas data frame
+        out_data = [[i] + [self.smiles[i]] + self.data[i] for i in indices]
+        df = pd.DataFrame(out_data, columns=['ID','smiles']+self.labels)
+        # Write the data frame to a CSV file
+        df.to_csv(out_name+'.csv')
+
+        return
+    
+    
+    def write_sdf_per_molecule(self, out_dir, indices=None):
+        """Writes (a subset of) the data set as one SDF file per molecule.
+        Args:
+            out_dir (str): The directory for the SDF files.
+            indices (int[]): The indices of the molecules to write data for.
+        """
+        
+        # Define which molecules to use (counting indices of processed data set)
+        if indices is None:
+            indices = np.arange(len(self))
+            
+        # Create the output directory if it does not exist yet
+        os.makedirs(out_dir,exist_ok=True)
+
+        # Go through all molecules
+        for j,idx in enumerate(indices):
+            mol = self.mol[idx]
+            # Define the file name (one file per molecule)
+            file_name = 'mol%07i.sdf'%idx
+            # Open the writer
+            w = Chem.SDWriter(os.path.join(out_dir,file_name))
+            # Write all conformers into this molecule's file
+            for conf_id in range(mol.GetNumConformers()): 
+                w.write(mol,conf_id)
+            w.close()
+
+        # Create a Pandas data frame
+        out_data = [[i] + [self.smiles[i]] + self.data[i] for i in indices]
+        df = pd.DataFrame(out_data, columns=['ID','smiles']+self.labels)
+        # Write the data frame to a CSV file
+        df.to_csv(os.path.join(out_dir,'data.csv'))
+
+        return
+
+    
+    def write_sdf_per_conformer(self, out_dir, indices=None):
+        """Writes (a subset of) the data set as one SDF file per conformer.
+        Args:
+            out_dir (str): The directory for the SDF files.
+            indices (int[]): The indices of the molecules to write data for.
+        """
+        
+        # Define which molecules to use (counting indices of processed data set)
+        if indices is None:
+            indices = np.arange(len(self))
+            
+        # Create the output directory if it does not exist yet
+        os.makedirs(out_dir,exist_ok=True)
+
+        # Go through all molecules
+        for j,idx in enumerate(indices):
+            mol = self.mol[idx]
+            for conf_id in range(mol.GetNumConformers()):
+                # Define the file name (one file per conformer)
+                file_name = 'mol%07i-conf%02i.sdf'%(idx,conf_id)
+                # Open the writer
+                w = Chem.SDWriter(os.path.join(out_dir,file_name))
+                # Write all conformers into this conformer's file
+                w.write(mol,conf_id)
+                w.close()
+
+        # Create a Pandas data frame
+        out_data = [[i] + [self.smiles[i]] + self.data[i] for i in indices]
+        df = pd.DataFrame(out_data, columns=['ID','smiles']+self.labels)
+        # Write the data frame to a CSV file
+        df.to_csv(os.path.join(out_dir,'data.csv'))
+
         return
     
     
