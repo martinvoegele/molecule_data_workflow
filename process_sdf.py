@@ -52,6 +52,14 @@ def write_dataset(ds, out_dir_name, split='random', seed=42):
                                                   test_list  = temp_split_dir+'/test.txt',
                                                   random_seed = seed)
         print('Training: %i molecules. Validation: %i molecules. Test: %i molecules.'%(len(ind_tr),len(ind_va),len(ind_te)))
+    elif  args.split=='predefined':
+        print('Writing dataset with pre-defined split.')
+        temp_split_dir = 'datasets_raw/'+ds.name+'/split-predefined'
+        ind_te, ind_va, ind_tr = ds.split_by_list(train_list = temp_split_dir+'/training.txt',
+                                                  vali_list  = temp_split_dir+'/validation.txt',
+                                                  test_list  = temp_split_dir+'/test.txt',
+                                                  random_seed = seed)
+        print('Training: %i molecules. Validation: %i molecules. Test: %i molecules.'%(len(ind_tr),len(ind_va),len(ind_te)))
     else:
         print('No valid split selected. No NPZ files were written.')
     ind_tv = np.concatenate([ind_tr, ind_va])

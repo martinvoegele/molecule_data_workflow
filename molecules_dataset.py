@@ -420,7 +420,10 @@ class MoleculesDataset(Dataset):
             if len(conf_coord) == 0: 
                 print('No conformers were generated. Excluded from dataset.')
                 continue
-            
+
+            # Give the molecule a name 
+            m.SetProp("_Name", raw_lnum[im])
+
             # Shuffle the atom order
             if order_atoms:
                 m = reorder_atoms(m)
