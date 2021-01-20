@@ -837,7 +837,7 @@ class MoleculesDataset(Dataset):
         # Go through all molecules
         for j,idx in enumerate(indices):
             mol = self.mol[idx]
-            mol.SetProp('_Name',self.lnum)
+            mol.SetProp('_Name',self.lnum[idx])
             print('Writing molecule '+mol.GetProp("_Name"))
             for conf_id in range(mol.GetNumConformers()):
                 # Write all conformers into this file

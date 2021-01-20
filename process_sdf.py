@@ -104,10 +104,10 @@ if __name__ == "__main__":
     print(' ... the following elements:',selected_elements)
     
     # Create the data set
-    ds = MoleculesDataset(args.data_file, args.labels, name=args.data_name, id_name=args.id_name,
-                          elements=selected_elements, max_num_at=args.max_num_at, badlist=args.badlist,
-                          num_conf=args.num_conf, order_atoms=False, shuffle_atoms=False, add_h=False)
-    print('Created dataset with %i molecules.'%len(ds.smiles))
+#    ds = MoleculesDataset(args.data_file, args.labels, name=args.data_name, id_name=args.id_name,
+#                          elements=selected_elements, max_num_at=args.max_num_at, badlist=args.badlist,
+#                          num_conf=args.num_conf, order_atoms=False, shuffle_atoms=False, add_h=False)
+#    print('Created dataset with %i molecules.'%len(ds.smiles))
 
 
     # Create the directory for this data set
@@ -115,8 +115,8 @@ if __name__ == "__main__":
     except FileExistsError: pass
 
     # Dump the entire dataset
-    ds_file = open(args.out_dir+'/dataset.pkl', 'wb')
-    pickle.dump(ds, ds_file)
+#    ds_file = open(args.out_dir+'/dataset.pkl', 'wb')
+#    pickle.dump(ds, ds_file)
 
     # Load the dataset
     ds_file = open(args.out_dir+'/dataset.pkl', 'rb')
